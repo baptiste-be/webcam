@@ -3,74 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AirCam - P2P Webcam</title>
+    <title>AirCam® - Premium P2P</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        :root { --accent: #00f2fe; --secondary: #4facfe; }
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            background: #0f172a;
             color: white;
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            overflow-x: hidden;
         }
         .glass {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 24px;
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 32px;
         }
-        .btn-primary {
-            background: white;
-            color: #764ba2;
-            font-weight: bold;
-            transition: all 0.3s ease;
+        .btn-gradient {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+            color: #0f172a;
+            font-weight: 800;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .btn-primary:active { transform: scale(0.95); }
-        video { border-radius: 18px; width: 100%; background: black; }
+        .btn-gradient:active { transform: scale(0.96); brightness: 0.9; }
+        
+        .pulse-pin {
+            animation: pulse-border 2s infinite;
+        }
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(0, 242, 254, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 242, 254, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 242, 254, 0); }
+        }
+        video { border-radius: 24px; width: 100%; object-fit: cover; aspect-ratio: 9/16; background: #000; }
         .hidden { display: none; }
     </style>
 </head>
-<body class="flex items-center justify-center p-4">
+<body class="flex items-center justify-center min-h-screen p-6">
 
-    <div id="setup-screen" class="glass p-8 w-full max-w-md text-center shadow-2xl">
-        <h1 class="text-3xl font-bold mb-6">AirCam 📸</h1>
-        <p class="mb-8 opacity-80">Choisissez le rôle de cet appareil</p>
+    <div id="setup-screen" class="glass p-10 w-full max-w-sm text-center shadow-2xl border-t border-white/20">
+        <div class="mb-8">
+            <h1 class="text-4xl font-black tracking-tighter mb-2">AirCam<span class="text-cyan-400">®</span></h1>
+            <p class="text-slate-400 text-sm italic">Streaming P2P Ultra-Sécurisé</p>
+        </div>
         
-        <button onclick="startAsCamera()" class="w-full btn-primary py-4 mb-4 rounded-xl shadow-lg">
-            📷 Utiliser comme Caméra
+        <button onclick="startAsCamera()" class="w-full btn-gradient py-5 mb-4 rounded-2xl shadow-lg uppercase tracking-wider text-sm">
+            Diffuser ma Caméra
         </button>
         
-        <button onclick="showViewerInput()" class="w-full bg-transparent border-2 border-white py-4 rounded-xl font-bold">
-            📱 Voir une Caméra
+        <button onclick="showViewerInput()" class="w-full bg-slate-800 text-white border border-slate-700 py-5 rounded-2xl font-bold hover:bg-slate-700 transition">
+            Rejoindre un flux
         </button>
     </div>
 
-    <div id="camera-screen" class="glass p-6 w-full max-w-md hidden">
-        <div class="relative mb-4">
+    <div id="camera-screen" class="glass p-4 w-full max-w-sm hidden">
+        <div class="relative">
             <video id="localVideo" autoplay playsinline muted></video>
-            <div class="absolute top-4 left-4 right-4 flex justify-between gap-2">
-                <div class="bg-black/60 p-2 rounded-lg text-xs text-center flex-1">
-                    <span class="block opacity-70">PIN 1</span>
-                    <b id="display-pin1" class="text-lg tracking-widest text-green-400">----</b>
-                </div>
-                <div class="bg-black/60 p-2 rounded-lg text-xs text-center flex-1">
-                    <span class="block opacity-70">PIN 2</span>
-                    <b id="display-pin2" class="text-lg tracking-widest text-cyan-400">----</b>
+            
+            <div class="absolute bottom-6 left-0 right-0 px-4">
+                <div class="bg-black/80 backdrop-blur-md p-4 rounded-3xl border border-white/10 shadow-2xl">
+                    <p class="text-[10px] uppercase tracking-[0.2em] text-cyan-400 font-bold mb-3 text-center">Codes de Connexion AirCam®</p>
+                    <div class="flex justify-between gap-3">
+                        <div class="bg-slate-900/50 p-3 rounded-xl flex-1 text-center pulse-pin">
+                            <span class="block text-[10px] opacity-50 mb-1">PIN 1</span>
+                            <b id="display-pin1" class="text-xl font-mono text-white">----</b>
+                        </div>
+                        <div class="bg-slate-900/50 p-3 rounded-xl flex-1 text-center pulse-pin">
+                            <span class="block text-[10px] opacity-50 mb-1">PIN 2</span>
+                            <b id="display-pin2" class="text-xl font-mono text-white">----</b>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <p class="text-center text-sm opacity-70">Laissez cette page ouverte pour diffuser.</p>
     </div>
 
-    <div id="viewer-screen" class="glass p-6 w-full max-w-md hidden">
-        <h2 class="text-xl font-bold mb-4 text-center">Connexion</h2>
-        <input type="number" id="input-pin1" placeholder="Entrez PIN 1 (8 chiffres)" class="w-full p-4 mb-3 rounded-xl bg-white/10 border border-white/20 text-center outline-none">
-        <input type="number" id="input-pin2" placeholder="Entrez PIN 2 (8 chiffres)" class="w-full p-4 mb-6 rounded-xl bg-white/10 border border-white/20 text-center outline-none">
-        
-        <button onclick="connectToCamera()" class="w-full btn-primary py-4 rounded-xl">Rejoindre le flux</button>
-        
-        <div id="remote-video-container" class="mt-6 hidden">
-            <video id="remoteVideo" autoplay playsinline></video>
+    <div id="viewer-screen" class="glass p-8 w-full max-w-sm hidden">
+        <h2 class="text-2xl font-bold mb-6 text-center">Connexion <span class="text-cyan-400">AirCam®</span></h2>
+        <div class="space-y-4">
+            <input type="number" id="input-pin1" placeholder="PIN 1 (8 chiffres)" class="w-full p-5 rounded-2xl bg-slate-900 border border-slate-700 text-center text-xl font-mono focus:border-cyan-400 outline-none transition">
+            <input type="number" id="input-pin2" placeholder="PIN 2 (8 chiffres)" class="w-full p-5 rounded-2xl bg-slate-900 border border-slate-700 text-center text-xl font-mono focus:border-cyan-400 outline-none transition">
+            
+            <button id="btn-rejoindre" onclick="connectToCamera()" class="w-full btn-gradient py-5 rounded-2xl mt-4 shadow-blue-500/20 shadow-xl">
+                REJOINDRE LE FLUX
+            </button>
+        </div>
+
+        <div id="remote-video-container" class="mt-8 hidden animate-in fade-in zoom-in duration-500">
+            <video id="remoteVideo" autoplay playsinline class="border-2 border-cyan-500/30"></video>
+            <button onclick="location.reload()" class="mt-4 text-slate-400 text-sm w-full text-center">Déconnexion</button>
         </div>
     </div>
 
@@ -78,38 +100,43 @@
         let peer;
         let localStream;
 
-        // Fonction pour générer un code à 8 chiffres
         function generatePin() {
             return Math.floor(10000000 + Math.random() * 90000000).toString();
         }
 
-        // --- MODE CAMÉRA ---
         async function startAsCamera() {
             const pin1 = generatePin();
             const pin2 = generatePin();
-            const peerId = pin1 + pin2; // L'ID réel est la fusion des deux
+            const peerId = "aircam-" + pin1 + "-" + pin2;
 
-            document.getElementById('display-pin1').innerText = pin1;
-            document.getElementById('display-pin2').innerText = pin2;
-            
             try {
-                localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: true });
+                // On demande la caméra d'abord
+                localStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "environment", width: 1280 }, 
+                    audio: true 
+                });
                 document.getElementById('localVideo').srcObject = localStream;
                 
+                // On initialise PeerJS après avoir eu l'autorisation caméra
                 peer = new Peer(peerId);
+                
                 peer.on('open', () => {
+                    document.getElementById('display-pin1').innerText = pin1;
+                    document.getElementById('display-pin2').innerText = pin2;
                     switchScreen('setup-screen', 'camera-screen');
                 });
 
                 peer.on('call', (call) => {
-                    call.answer(localStream); // Répondre à l'appel avec le flux vidéo
+                    call.answer(localStream);
                 });
+
+                peer.on('error', (err) => alert("Erreur de connexion : " + err.type));
+
             } catch (err) {
-                alert("Erreur caméra : " + err);
+                alert("Erreur : Assurez-vous d'être en HTTPS et d'autoriser la caméra.");
             }
         }
 
-        // --- MODE VISIONNEUR ---
         function showViewerInput() {
             switchScreen('setup-screen', 'viewer-screen');
         }
@@ -117,22 +144,40 @@
         function connectToCamera() {
             const p1 = document.getElementById('input-pin1').value;
             const p2 = document.getElementById('input-pin2').value;
-            const targetId = p1 + p2;
+            if(!p1 || !p2) return alert("Entrez les deux codes !");
+            
+            const targetId = "aircam-" + p1 + "-" + p2;
+            const btn = document.getElementById('btn-rejoindre');
+            btn.innerText = "CONNEXION EN COURS...";
+            btn.disabled = true;
 
-            peer = new Peer(); // ID aléatoire pour le visionneur
+            // Créer un Peer avec ID aléatoire
+            peer = new Peer();
             
             peer.on('open', () => {
-                const call = peer.call(targetId, new MediaStream()); // On appelle la caméra
+                // Envoyer un stream vide pour déclencher l'appel
+                const call = peer.call(targetId, new MediaStream());
                 
                 call.on('stream', (remoteStream) => {
+                    btn.classList.add('hidden');
+                    document.getElementById('input-pin1').classList.add('hidden');
+                    document.getElementById('input-pin2').classList.add('hidden');
                     document.getElementById('remote-video-container').classList.remove('hidden');
                     document.getElementById('remoteVideo').srcObject = remoteStream;
                 });
+
+                // Petit timeout si ça ne répond pas
+                setTimeout(() => {
+                    if (btn.innerText === "CONNEXION EN COURS...") {
+                        alert("Impossible de trouver la caméra. Vérifiez les codes.");
+                        location.reload();
+                    }
+                }, 10000);
             });
         }
 
         function switchScreen(hide, show) {
-            document.getElementById(hide).classList.add('hidden');
+            document.getElementById(hide).style.display = 'none';
             document.getElementById(show).classList.remove('hidden');
         }
     </script>
