@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AirCam - P2P Webcam</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+        }
+        .btn-primary {
+            background: white;
+            color: #764ba2;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:active { transform: scale(0.95); }
+        video { border-radius: 18px; width: 100%; background: black; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+
+    <div id="setup-screen" class="glass p-8 w-full max-w-md text-center shadow-2xl">
+        <h1 class="text-3xl font-bold mb-6">AirCam 📸</h1>
+        <p class="mb-8 opacity-80">Choisissez le rôle de cet appareil</p>
+        
+        <button onclick="startAsCamera()" class="w-full btn-primary py-4 mb-4 rounded-xl shadow-lg">
+            📷 Utiliser comme Caméra
+        </button>
+        
+        <button onclick="showViewerInput()" class="w-full bg-transparent border-2 border-white py-4 rounded-xl font-bold">
+            📱 Voir une Caméra
+        </button>
+    </div>
+
+    <div id="camera-screen" class="glass p-6 w-full max-w-md hidden">
+        <div class="relative mb-4">
+            <video id="localVideo" autoplay playsinline muted></video>
+            <div class="absolute top-4 left-4 right-4 flex justify-between gap-2">
+                <div class="bg-black/60 p-2 rounded-lg text-xs text-center flex-1">
+                    <span class="block opacity-70">PIN 1</span>
+                    <b id="display-pin1" class="text-lg tracking-widest text-green-400">----</b>
+                </div>
+                <div class="bg-black/60 p-2 rounded-lg text-xs text-center flex-1">
+                    <span class="block opacity-70">PIN 2</span>
+                    <b id="display-pin2" class="text-lg tracking-widest text-cyan-400">----</b>
+                </div>
+            </div>
+        </div>
+        <p class="text-center text-sm opacity-70">Laissez cette page ouverte pour diffuser.</p>
+    </div>
+
+    <div id="viewer-screen" class="glass p-6 w-full max-w-md hidden">
+        <h2 class="text-xl font-bold mb-4 text-center">Connexion</h2>
+        <input type="number" id="input-pin1" placeholder="Entrez PIN 1 (8 chiffres)" class="w-full p-4 mb-3 rounded-xl bg-white/10 border border-white/20 text-center outline-none">
+        <input type="number" id="input-pin2" placeholder="Entrez PIN 2 (8 chiffres)" class="w-full p-4 mb-6 rounded-xl bg-white/10 border border-white/20 text-center outline-none">
+        
+        <button onclick="connectToCamera()" class="w-full btn-primary py-4 rounded-xl">Rejoindre le flux</button>
+        
+        <div id="remote-video-container" class="mt-6 hidden">
+            <video id="remoteVideo" autoplay playsinline></video>
+        </div>
+    </div>
+
+    <script>
+        let peer;
+        let localStream;
+
+        // Fonction pour générer un code à 8 chiffres
+        function generatePin() {
+            return Math.floor(10000000 + Math.random() * 90000000).toString();
+        }
+
+        // --- MODE CAMÉRA ---
+        async function startAsCamera() {
+            const pin1 = generatePin();
+            const pin2 = generatePin();
+            const peerId = pin1 + pin2; // L'ID réel est la fusion des deux
+
+            document.getElementById('display-pin1').innerText = pin1;
+            document.getElementById('display-pin2').innerText = pin2;
+            
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: true });
+                document.getElementById('localVideo').srcObject = localStream;
+                
+                peer = new Peer(peerId);
+                peer.on('open', () => {
+                    switchScreen('setup-screen', 'camera-screen');
+                });
+
+                peer.on('call', (call) => {
+                    call.answer(localStream); // Répondre à l'appel avec le flux vidéo
+                });
+            } catch (err) {
+                alert("Erreur caméra : " + err);
+            }
+        }
+
+        // --- MODE VISIONNEUR ---
+        function showViewerInput() {
+            switchScreen('setup-screen', 'viewer-screen');
+        }
+
+        function connectToCamera() {
+            const p1 = document.getElementById('input-pin1').value;
+            const p2 = document.getElementById('input-pin2').value;
+            const targetId = p1 + p2;
+
+            peer = new Peer(); // ID aléatoire pour le visionneur
+            
+            peer.on('open', () => {
+                const call = peer.call(targetId, new MediaStream()); // On appelle la caméra
+                
+                call.on('stream', (remoteStream) => {
+                    document.getElementById('remote-video-container').classList.remove('hidden');
+                    document.getElementById('remoteVideo').srcObject = remoteStream;
+                });
+            });
+        }
+
+        function switchScreen(hide, show) {
+            document.getElementById(hide).classList.add('hidden');
+            document.getElementById(show).classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
