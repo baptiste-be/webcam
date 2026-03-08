@@ -5,69 +5,343 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Connexion Caméra</title>
 
-  <!-- Style minimaliste Android-like -->
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       margin: 0;
       padding: 0;
-      font-family: "Roboto", sans-serif;
-      background: #0d0d0d;
-      color: white;
+      font-family: "Roboto", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #050608;
+      color: #fff;
       display: flex;
-      flex-direction: column;
       justify-content: center;
       align-items: center;
-      height: 100vh;
-      text-align: center;
+      min-height: 100vh;
     }
-
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 40px;
+    .app {
+      width: 100%;
+      max-width: 480px;
+      padding: 24px 16px 32px;
+    }
+    h1, h2 {
       font-weight: 500;
+      text-align: center;
+      margin: 0 0 24px;
     }
-
+    p {
+      margin: 0 0 16px;
+      text-align: center;
+      color: #b0b3b8;
+    }
     .btn {
-      width: 80%;
-      max-width: 320px;
-      padding: 18px;
-      margin: 12px 0;
+      width: 100%;
+      padding: 16px;
+      margin: 8px 0;
       border-radius: 12px;
       border: none;
-      font-size: 1.2rem;
+      font-size: 1.05rem;
       font-weight: 500;
       cursor: pointer;
       transition: 0.2s;
+      color: #fff;
     }
-
-    .camera {
+    .btn-primary {
       background: #1e88e5;
     }
-    .camera:hover {
+    .btn-primary:hover {
       background: #1565c0;
     }
-
-    .viewer {
+    .btn-secondary {
       background: #43a047;
     }
-    .viewer:hover {
+    .btn-secondary:hover {
       background: #2e7d32;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid #3a3b3c;
+      color: #e4e6eb;
+    }
+    .btn-outline:hover {
+      background: #202124;
+    }
+    .section {
+      display: none;
+      animation: fadeIn 0.25s ease-out;
+    }
+    .section.active {
+      display: block;
+    }
+    .video-container {
+      margin: 16px 0;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #000;
+      border: 1px solid #272727;
+    }
+    video {
+      width: 100%;
+      height: auto;
+      display: block;
+      background: #000;
+    }
+    .pins {
+      margin-top: 16px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      background: #111318;
+      border: 1px solid #272727;
+      text-align: center;
+      font-family: "Roboto Mono", monospace;
+    }
+    .pin {
+      font-size: 1.4rem;
+      letter-spacing: 0.12em;
+      margin: 4px 0;
+    }
+    .label {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      color: #9fa2a8;
+      letter-spacing: 0.12em;
+    }
+    .inputs {
+      margin-top: 16px;
+    }
+    .input-group {
+      margin-bottom: 12px;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid #3a3b3c;
+      background: #111318;
+      color: #e4e6eb;
+      font-size: 1rem;
+      text-align: center;
+      letter-spacing: 0.12em;
+      font-family: "Roboto Mono", monospace;
+    }
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #1e88e5;
+    }
+    .top-bar {
+      display: flex;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .top-bar button {
+      width: auto;
+      padding: 8px 12px;
+      font-size: 0.9rem;
+      margin-right: auto;
+    }
+    .top-bar h2 {
+      flex: 1;
+      text-align: center;
+      margin-right: 32px;
+    }
+    .status {
+      margin-top: 8px;
+      font-size: 0.9rem;
+      text-align: center;
+      color: #9fa2a8;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
-
 <body>
+  <div class="app">
+    <!-- Accueil -->
+    <section id="home" class="section active">
+      <h1>Connexion Caméra</h1>
+      <p>Choisis le rôle de cet appareil.<br>Les deux appareils doivent être sur Internet.</p>
+      <button class="btn btn-primary" id="btnUseAsCamera">
+        Utiliser comme caméra
+      </button>
+      <button class="btn btn-secondary" id="btnUseAsViewer">
+        Accéder à une caméra
+      </button>
+    </section>
 
-  <h1>Choisir un mode</h1>
+    <!-- Mode Caméra -->
+    <section id="cameraSection" class="section">
+      <div class="top-bar">
+        <button class="btn btn-outline" id="backFromCamera">Retour</button>
+        <h2>Caméra</h2>
+      </div>
 
-  <button class="btn camera" onclick="location.href='camera.html'">
-    Utiliser comme caméra
-  </button>
+      <p>La caméra de cet appareil sera partagée avec un autre appareil via deux codes PIN.</p>
 
-  <button class="btn viewer" onclick="location.href='viewer.html'">
-    Accéder à une caméra
-  </button>
+      <div class="video-container">
+        <video id="localVideo" autoplay playsinline muted></video>
+      </div>
 
+      <button class="btn btn-primary" id="btnStartCamera">
+        Activer la caméra & générer les PIN
+      </button>
+
+      <div id="cameraPins" class="pins" style="display:none;">
+        <div class="label">Code PIN 1</div>
+        <div id="pin1" class="pin">────────</div>
+        <div class="label" style="margin-top:8px;">Code PIN 2</div>
+        <div id="pin2" class="pin">────────</div>
+        <p class="status">Donne ces deux codes à la personne qui doit se connecter.</p>
+      </div>
+
+      <p class="status" id="cameraStatus"></p>
+    </section>
+
+    <!-- Mode Viewer -->
+    <section id="viewerSection" class="section">
+      <div class="top-bar">
+        <button class="btn btn-outline" id="backFromViewer">Retour</button>
+        <h2>Viewer</h2>
+      </div>
+
+      <p>Entre les deux codes PIN fournis par la personne qui a la caméra.</p>
+
+      <div class="inputs">
+        <div class="input-group">
+          <input type="text" id="inputPin1" maxlength="8" placeholder="PIN 1 (8 chiffres)">
+        </div>
+        <div class="input-group">
+          <input type="text" id="inputPin2" maxlength="8" placeholder="PIN 2 (8 chiffres)">
+        </div>
+      </div>
+
+      <button class="btn btn-secondary" id="btnConnectViewer">
+        Se connecter à la caméra
+      </button>
+
+      <p class="status" id="viewerStatus"></p>
+
+      <div class="video-container" style="margin-top:16px;">
+        <video id="remoteVideo" autoplay playsinline></video>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // --- Navigation simple ---
+    const home = document.getElementById('home');
+    const cameraSection = document.getElementById('cameraSection');
+    const viewerSection = document.getElementById('viewerSection');
+
+    document.getElementById('btnUseAsCamera').onclick = () => {
+      showSection('camera');
+    };
+    document.getElementById('btnUseAsViewer').onclick = () => {
+      showSection('viewer');
+    };
+    document.getElementById('backFromCamera').onclick = () => {
+      showSection('home');
+      stopLocalStream();
+    };
+    document.getElementById('backFromViewer').onclick = () => {
+      showSection('home');
+      // Ici tu pourras aussi fermer la connexion WebRTC côté viewer
+    };
+
+    function showSection(name) {
+      home.classList.remove('active');
+      cameraSection.classList.remove('active');
+      viewerSection.classList.remove('active');
+      if (name === 'home') home.classList.add('active');
+      if (name === 'camera') cameraSection.classList.add('active');
+      if (name === 'viewer') viewerSection.classList.add('active');
+    }
+
+    // --- Mode Caméra ---
+    const localVideo = document.getElementById('localVideo');
+    const cameraStatus = document.getElementById('cameraStatus');
+    const cameraPins = document.getElementById('cameraPins');
+    const pin1El = document.getElementById('pin1');
+    const pin2El = document.getElementById('pin2');
+
+    let localStream = null;
+    let sessionKey = null; // ex: pin1-pin2
+    // let pcCamera = null; // RTCPeerConnection côté caméra (quand tu feras WebRTC)
+
+    document.getElementById('btnStartCamera').onclick = async () => {
+      cameraStatus.textContent = 'Demande d’accès à la caméra...';
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        localVideo.srcObject = localStream;
+
+        // Génération des PIN (8 chiffres)
+        const pin1 = generatePin();
+        const pin2 = generatePin();
+        sessionKey = pin1 + '-' + pin2;
+
+        pin1El.textContent = pin1;
+        pin2El.textContent = pin2;
+        cameraPins.style.display = 'block';
+        cameraStatus.textContent = 'Caméra active. En attente de connexion du viewer.';
+
+        // Ici tu créeras le RTCPeerConnection, l’offer, et tu enverras tout au serveur
+        // via WebSocket/Socket.io avec sessionKey.
+      } catch (err) {
+        console.error(err);
+        cameraStatus.textContent = 'Impossible d’accéder à la caméra.';
+      }
+    };
+
+    function stopLocalStream() {
+      if (localStream) {
+        localStream.getTracks().forEach(t => t.stop());
+        localStream = null;
+      }
+      localVideo.srcObject = null;
+      cameraPins.style.display = 'none';
+      cameraStatus.textContent = '';
+    }
+
+    function generatePin() {
+      return Math.floor(10000000 + Math.random() * 90000000).toString();
+    }
+
+    // --- Mode Viewer ---
+    const viewerStatus = document.getElementById('viewerStatus');
+    const remoteVideo = document.getElementById('remoteVideo');
+    const inputPin1 = document.getElementById('inputPin1');
+    const inputPin2 = document.getElementById('inputPin2');
+
+    // let pcViewer = null; // RTCPeerConnection côté viewer
+
+    document.getElementById('btnConnectViewer').onclick = () => {
+      const p1 = inputPin1.value.trim();
+      const p2 = inputPin2.value.trim();
+
+      if (p1.length !== 8 || p2.length !== 8 || !/^\d+$/.test(p1 + p2)) {
+        viewerStatus.textContent = 'Les deux PIN doivent contenir 8 chiffres.';
+        return;
+      }
+
+      const key = p1 + '-' + p2;
+      viewerStatus.textContent = 'Connexion en cours avec la caméra...';
+
+      // Ici tu contactes ton serveur avec key (WebSocket/HTTP) pour :
+      // - vérifier que la session existe
+      // - récupérer l’offer WebRTC
+      // - renvoyer une answer
+      // - échanger les ICE candidates
+      //
+      // Quand tu auras le flux :
+      // remoteVideo.srcObject = remoteStream;
+
+      // Pour l’instant, on simule juste :
+      setTimeout(() => {
+        viewerStatus.textContent = 'En attente de la partie WebRTC/serveur (à implémenter).';
+      }, 800);
+    };
+  </script>
 </body>
 </html>
-
